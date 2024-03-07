@@ -32,7 +32,7 @@ prefix=""
 comment "Let's start with the hello-moon example"
 pe 'tree buildpacks/hello-moon'
 pe 'tree buildpacks/hello-moon-windows'
-clear
+pe 'clear'
 
 mkdir buildpacks/hello-moon/linux
 mkdir buildpacks/hello-moon/windows
@@ -85,7 +85,7 @@ pe 'clear'
 comment "Let's now create our multi-arch hello-moon buildpack"
 cd buildpacks/hello-moon
 pe '$PACK_BINARY buildpack package $repo/cnb-hello-moon --verbose --publish'
-pe 'crane manifest $repo/cnb-hello-moon | jq .'
+pe 'crane manifest $repo/cnb-hello-moon |  jq ".manifests[].digest, .manifests[].platform" '
 pe 'clear'
 
 
@@ -169,14 +169,16 @@ cd buildpacks/hello-world
 pe 'clear'
 pe '$PACK_BINARY buildpack package $repo/cnb-hello-world --verbose --publish'
 pe 'clear'
-pe 'crane manifest $repo/cnb-hello-world | jq .'
+pe 'crane manifest $repo/cnb-hello-world | jq ".manifests[].digest, .manifests[].platform"'
 pe 'clear'
 pe 'dive $repo/cnb-hello-world'
 clear
 pe 'dive $repo/cnb-hello-world@sha256:763a33569a508833d39bb345763517536dcb2093788a8e959aab5a8ee85722f6'
 clear
 
-comment "How do we create multi-arch composite buildpacks?"
+cowsay "How do we create multi-arch composite buildpack?"
+pe 'clear'
+
 cd $SAMPLES_REPO
 cat << EOF > buildpacks/hello-universe/package.toml
 [buildpack]
@@ -303,13 +305,18 @@ run-image = "$repo/cnbs-run-alpine:latest"
 EOF
 
 comment "Now it is time for the builder"
+
+cowsay "Ok! now that we have multi-arch buildpacks, builder and run images. It's time to create a multi-arch builder"
+pe 'clear'
+
+
 pe 'bat builders/alpine/builder.toml'
 pe 'clear'
 
 cd builders/alpine/
 pe '$PACK_BINARY builder create $repo/cnbs-builder-alpine --config builder.toml --publish --verbose'
 pe 'clear'
-pe 'crane manifest $repo/cnbs-builder-alpine | jq .'
+pe 'crane manifest $repo/cnbs-builder-alpine | jq ".manifests[].digest, .manifests[].platform"'
 pe 'clear'
 pe 'dive $repo/cnbs-builder-alpine'
 
