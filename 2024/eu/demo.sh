@@ -29,69 +29,20 @@ registry=$(docker run -d -p 5000:5000 --name registry --restart always registry:
 repo="localhost:5000"
 prefix=""
 
-comment "Let's start with the hello-moon example"
-pe 'tree buildpacks/hello-moon'
-pe 'tree buildpacks/hello-moon-windows'
+cowsay "Let's start for reviewing our current folder structure when creating a buildpack"
 pe 'clear'
 
-mkdir buildpacks/hello-moon/linux
-mkdir buildpacks/hello-moon/windows
-cp -R buildpacks/hello-moon-windows/bin buildpacks/hello-moon/windows 
-cp buildpacks/hello-moon-windows/README.md buildpacks/hello-moon/windows
-mv buildpacks/hello-moon/bin buildpacks/hello-moon/linux 
-mv buildpacks/hello-moon/README.md buildpacks/hello-moon/linux
-
-comment "After doing some refactoring"
-cat <<EOF > buildpacks/hello-moon/buildpack.toml
-# Buildpack API version
-api = "0.10"
-
-# Buildpack ID and metadata
-[buildpack]
-id = "samples/hello-moon"
-version = "0.0.1"
-name = "Hello Moon Buildpack"
-homepage = "https://github.com/buildpacks/samples/tree/main/buildpacks/hello-moon"
-sbom-formats = ["application/vnd.cyclonedx+json"]
-
-# Targets the buildpack will work with
-[[targets]]
-os = "linux"
-arch = "amd64"
-
-[[targets]]
-os = "linux"
-arch = "arm64"
-
-[[targets]]
-os = "windows"
-arch = "amd64"
-
-[[targets]]
-os = "windows"
-arch = "arm64"
-
-# Stacks (deprecated) the buildpack will work with
-[[stacks]]
-id = "*"
-EOF
-
-
-pe 'tree buildpacks/hello-moon'
-pe 'clear'
-pe 'bat buildpacks/hello-moon/buildpack.toml'
+pe 'tree buildpacks/hello-world'
 pe 'clear'
 
-comment "Let's now create our multi-arch hello-moon buildpack"
-cd buildpacks/hello-moon
-pe '$PACK_BINARY buildpack package $repo/cnb-hello-moon --verbose --publish'
-pe 'crane manifest $repo/cnb-hello-moon |  jq ".manifests[].digest, .manifests[].platform" '
+cowsay "There is an new RFC that proposes a new way of organizing the binaries if we want to create a multi-arch Buildpack or Builder. How does it look like?"
 pe 'clear'
 
+cd $SCRIPT_REPO
+pe 'tree rfc-proposal'
+pe 'clear'
 
 cd $SAMPLES_REPO
-comment "Let's do something similar for the hello-world buildpack"
-pe 'tree buildpacks/hello-world'
 
 mkdir -p buildpacks/hello-world/linux/amd64
 mkdir -p buildpacks/hello-world/linux/arm64
@@ -169,17 +120,59 @@ cd buildpacks/hello-world
 pe 'clear'
 pe '$PACK_BINARY buildpack package $repo/cnb-hello-world --verbose --publish'
 pe 'clear'
-pe 'crane manifest $repo/cnb-hello-world | jq ".manifests[].digest, .manifests[].platform"'
+pe 'crane manifest $repo/cnb-hello-world | jq .'
 pe 'clear'
-pe 'dive $repo/cnb-hello-world'
-clear
-pe 'dive $repo/cnb-hello-world@sha256:763a33569a508833d39bb345763517536dcb2093788a8e959aab5a8ee85722f6'
+
+
+cd $SAMPLES_REPO
+mkdir buildpacks/hello-moon/linux
+mkdir buildpacks/hello-moon/windows
+cp -R buildpacks/hello-moon-windows/bin buildpacks/hello-moon/windows 
+cp buildpacks/hello-moon-windows/README.md buildpacks/hello-moon/windows
+mv buildpacks/hello-moon/bin buildpacks/hello-moon/linux 
+mv buildpacks/hello-moon/README.md buildpacks/hello-moon/linux
+cat <<EOF > buildpacks/hello-moon/buildpack.toml
+# Buildpack API version
+api = "0.10"
+
+# Buildpack ID and metadata
+[buildpack]
+id = "samples/hello-moon"
+version = "0.0.1"
+name = "Hello Moon Buildpack"
+homepage = "https://github.com/buildpacks/samples/tree/main/buildpacks/hello-moon"
+sbom-formats = ["application/vnd.cyclonedx+json"]
+
+# Targets the buildpack will work with
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets]]
+os = "linux"
+arch = "arm64"
+
+[[targets]]
+os = "windows"
+arch = "amd64"
+
+[[targets]]
+os = "windows"
+arch = "arm64"
+
+# Stacks (deprecated) the buildpack will work with
+[[stacks]]
+id = "*"
+EOF
+
+cd buildpacks/hello-moon
+$PACK_BINARY buildpack package $repo/cnb-hello-moon --verbose --publish
 clear
 
+cd $SAMPLES_REPO
 cowsay "How do we create multi-arch composite buildpack?"
 pe 'clear'
 
-cd $SAMPLES_REPO
 cat << EOF > buildpacks/hello-universe/package.toml
 [buildpack]
 uri = "."
@@ -215,8 +208,9 @@ cd buildpacks/hello-universe
 pe 'clear'
 pe '$PACK_BINARY buildpack package $repo/cnb-hello-universe --verbose --publish --config ./package.toml'
 pe 'clear'
-pe 'dive $repo/cnb-hello-universe'
-clear
+pe 'crane manifest $repo/cnb-hello-universe | jq .'
+pe 'clear'
+
 
 cd $SAMPLES_REPO
 
@@ -304,11 +298,8 @@ build-image = "$repo/cnbs-build-alpine:latest"
 run-image = "$repo/cnbs-run-alpine:latest"
 EOF
 
-comment "Now it is time for the builder"
-
 cowsay "Ok! now that we have multi-arch buildpacks, builder and run images. It's time to create a multi-arch builder"
 pe 'clear'
-
 
 pe 'bat builders/alpine/builder.toml'
 pe 'clear'
@@ -316,7 +307,7 @@ pe 'clear'
 cd builders/alpine/
 pe '$PACK_BINARY builder create $repo/cnbs-builder-alpine --config builder.toml --publish --verbose'
 pe 'clear'
-pe 'crane manifest $repo/cnbs-builder-alpine | jq ".manifests[].digest, .manifests[].platform"'
+pe 'crane manifest $repo/cnbs-builder-alpine | jq .'
 pe 'clear'
 pe 'dive $repo/cnbs-builder-alpine'
 
