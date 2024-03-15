@@ -35,25 +35,13 @@ pe 'clear'
 pe 'tree buildpacks/hello-world'
 pe 'clear'
 
-cowsay "There is an new RFC that proposes a new way of organizing the binaries if we want to create a multi-arch Buildpack or Builder. How does it look like?"
-pe 'clear'
-
-cd $SCRIPT_REPO
-pe 'tree rfc-proposal'
+cowsay "Let's apply the changes proposed in the RFC"
 pe 'clear'
 
 cd $SAMPLES_REPO
 
 mkdir -p buildpacks/hello-world/linux/amd64
 mkdir -p buildpacks/hello-world/linux/arm64
-mkdir -p buildpacks/hello-world/windows/amd64
-mkdir -p buildpacks/hello-world/windows/arm64
-cp -R buildpacks/hello-world-windows/bin buildpacks/hello-world/windows/amd64
-cp -R buildpacks/hello-world-windows/bin buildpacks/hello-world/windows/arm64
-cp buildpacks/hello-world-windows/README.md buildpacks/hello-world/windows/amd64
-cp buildpacks/hello-world-windows/README.md buildpacks/hello-world/windows/arm64
-
-
 cp -R buildpacks/hello-world/bin buildpacks/hello-world/linux/amd64
 mv buildpacks/hello-world/bin buildpacks/hello-world/linux/arm64
 cp buildpacks/hello-world/README.md buildpacks/hello-world/linux/amd64
@@ -66,14 +54,6 @@ EOF
 
 cat <<EOF > buildpacks/hello-world/linux/arm64/linux-arm64.txt
 This is a linux/arm64 file..
-EOF
-
-cat <<EOF > buildpacks/hello-world/windows/amd64/windows-amd64.txt
-This is a windows/amd64 file ...
-EOF
-
-cat <<EOF > buildpacks/hello-world/windows/arm64/windows-arm64.txt
-This is a windows/arm64 file ....
 EOF
 
 cat <<EOF > buildpacks/hello-world/buildpack.toml
@@ -96,21 +76,12 @@ arch = "amd64"
 os = "linux"
 arch = "arm64"
 
-[[targets]]
-os = "windows"
-arch = "amd64"
-
-[[targets]]
-
-os = "windows"
-arch = "arm64"
-
 # Stacks (deprecated) the buildpack will work with
 [[stacks]]
 id = "*"
 EOF
 
-comment 'After doing some refactoring'
+comment 'After doing some changes, now the folder structure looks like this'
 pe 'tree buildpacks/hello-world'
 pe 'clear'
 pe 'bat buildpacks/hello-world/buildpack.toml'
@@ -125,10 +96,7 @@ pe 'clear'
 
 
 cd $SAMPLES_REPO
-mkdir buildpacks/hello-moon/linux
-mkdir buildpacks/hello-moon/windows
-cp -R buildpacks/hello-moon-windows/bin buildpacks/hello-moon/windows 
-cp buildpacks/hello-moon-windows/README.md buildpacks/hello-moon/windows
+mkdir buildpacks/hello-moon/linux 
 mv buildpacks/hello-moon/bin buildpacks/hello-moon/linux 
 mv buildpacks/hello-moon/README.md buildpacks/hello-moon/linux
 cat <<EOF > buildpacks/hello-moon/buildpack.toml
@@ -150,14 +118,6 @@ arch = "amd64"
 
 [[targets]]
 os = "linux"
-arch = "arm64"
-
-[[targets]]
-os = "windows"
-arch = "amd64"
-
-[[targets]]
-os = "windows"
 arch = "arm64"
 
 # Stacks (deprecated) the buildpack will work with
@@ -185,14 +145,6 @@ arch = "amd64"
 [[targets]]
 os = "linux"
 arch = "arm64"
-
-[[targets]]
-os = "windows"
-arch = "arm64"
-
-[[targets]]
-os = "windows"
-arch = "amd64"
 
 [[dependencies]]
 uri = "$prefix$repo/cnb-hello-world"
@@ -309,9 +261,6 @@ pe '$PACK_BINARY builder create $repo/cnbs-builder-alpine --config builder.toml 
 pe 'clear'
 pe 'crane manifest $repo/cnbs-builder-alpine | jq .'
 pe 'clear'
-pe 'dive $repo/cnbs-builder-alpine'
-
-clear
 
 filter=reference=$repo/*
 docker rmi -f $(docker  image ls --filter $filter -q)
