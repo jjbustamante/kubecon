@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-service-account
+  namespace: default
+secrets:
+- name: gcr-secret
+imagePullSecrets:
+- name: gcr-secret
